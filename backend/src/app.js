@@ -4,6 +4,7 @@ const prisma = require("./config/prisma");
 const authRoutes = require("./routes/auth.routes");
 const authenticate = require("./middlewares/auth.middleware");
 const authorizeRoles = require("./middlewares/role.middleware");
+const profileRoutes = require("./routes/profile.routes");
 
 
 
@@ -12,6 +13,8 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use("/api/auth", authRoutes);
+app.use("/api/profile", profileRoutes);
+
 
 
 
