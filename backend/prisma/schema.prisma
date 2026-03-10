@@ -1,0 +1,103 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url = env("DATABASE_URL")
+}
+
+enum UserRole {
+  STUDENT
+  COMPANY
+  SCHOOL
+  ADMIN
+}
+
+enum ApplicationStatus {
+  EN_ATTENTE
+  ACCEPTEE
+  REFUSEE
+  BLOQUEE
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  role      UserRole
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  student   Student?
+  company   Company?
+  school    School?
+}
+
+model Student {
+  id           Int           @id @default(autoincrement())
+  userId       Int           @unique
+  schoolId     Int?
+  firstName    String
+  lastName     String
+  fieldOfStudy String
+  studyLevel   String
+  city         String?
+  cvUrl        String?
+
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  school       School?       @relation(fields: [schoolId], references: [id])
+  applications Application[]
+}
+
+model Company {
+  id          Int               @id @default(autoincrement())
+  userId      Int               @unique
+  name        String
+  city        String?
+  description String?
+
+  user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  offers      InternshipOffer[]
+}
+
+model School {
+  id       Int       @id @default(autoincrement())
+  userId   Int       @unique
+  name     String
+  city     String?
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  students Student[]
+}
+
+model InternshipOffer {
+  id           Int           @id @default(autoincrement())
+  companyId    Int
+  title        String
+  description  String
+  fieldOfStudy String
+  studyLevel   String
+  city         String?
+  status       String        @default("ouverte")
+  createdAt    DateTime      @default(now())
+
+  company      Company       @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  applications Application[]
+}
+
+model Application {
+  id                  Int               @id @default(autoincrement())
+  studentId           Int
+  internshipOfferId   Int
+  motivationLetterUrl String
+  conventionUrl       String
+  status              ApplicationStatus @default(EN_ATTENTE)
+  createdAt           DateTime          @default(now())
+
+  student             Student           @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  internshipOffer     InternshipOffer   @relation(fields: [internshipOfferId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, internshipOfferId])
+}
+
