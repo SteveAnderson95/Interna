@@ -5,6 +5,7 @@ const authRoutes = require("./routes/auth.routes");
 const authenticate = require("./middlewares/auth.middleware");
 const authorizeRoles = require("./middlewares/role.middleware");
 const profileRoutes = require("./routes/profile.routes");
+const offerRoutes = require("./routes/offer.routes");
 
 
 
@@ -14,6 +15,7 @@ app.use(cors());
 app.use(express.json());
 app.use("/api/auth", authRoutes);
 app.use("/api/profile", profileRoutes);
+app.use("/api/offers", offerRoutes);
 
 
 
