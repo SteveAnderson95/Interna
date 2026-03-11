@@ -6,6 +6,7 @@ const authenticate = require("./middlewares/auth.middleware");
 const authorizeRoles = require("./middlewares/role.middleware");
 const profileRoutes = require("./routes/profile.routes");
 const offerRoutes = require("./routes/offer.routes");
+const applicationRoutes = require("./routes/application.routes");
 
 
 
@@ -16,6 +17,7 @@ app.use(express.json());
 app.use("/api/auth", authRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/api/offers", offerRoutes);
+app.use("/api/applications", applicationRoutes);
 
 
 
