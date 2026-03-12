@@ -1,27 +1,18 @@
-import { useEffect, useState } from "react";
-import api from "./services/api";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import LoginPage from "./pages/public/LoginPage";
+import RegisterPage from "./pages/public/RegisterPage";
+import DashboardPage from "./pages/DashboardPage";
 
 function App() {
-  const [message, setMessage] = useState("");
-
-  useEffect(() => {
-    const fetchHealth = async () => {
-      try {
-        const response = await api.get("/api/health");
-        setMessage(response.data.message);
-      } catch (error) {
-        setMessage("Erreur de connexion au backend");
-      }
-    };
-
-    fetchHealth();
-  }, []);
-
   return (
-    <div>
-      <h1>Interna</h1>
-      <p>{message}</p>
-    </div>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Navigate to="/login" />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/dashboard" element={<DashboardPage />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
 
