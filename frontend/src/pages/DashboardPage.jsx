@@ -41,10 +41,6 @@ function DashboardPage() {
       <div>
         <p>{error}</p>
         <button onClick={handleLogout}>Retour à la connexion</button>
-        <p>
-            <Link to="/profile">Aller à mon profil</Link>
-        </p>
-
       </div>
     );
   }
@@ -62,6 +58,13 @@ function DashboardPage() {
       )}
 
       <button onClick={handleLogout}>Logout</button>
+      <p>
+        <Link to="/offers">Voir les offres</Link>
+        </p>
+        <p>
+            <Link to="/profile">Aller à mon profil</Link>
+        </p>
+
     </div>
   );
 }
