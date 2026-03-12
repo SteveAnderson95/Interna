@@ -64,6 +64,10 @@ function DashboardPage() {
         <p>
             <Link to="/profile">Aller à mon profil</Link>
         </p>
+        <p>
+            <Link to="/my-applications">Voir mes candidatures</Link>
+        </p>
+
 
     </div>
   );

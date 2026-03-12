@@ -6,6 +6,8 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import PublicRoute from "./components/PublicRoute";
 import ProfilePage from "./pages/ProfilePage";
 import OffersPage from "./pages/OffersPage";
+import MyApplicationsPage from "./pages/MyApplicationsPage";
+
 
 function App() {
   return (
@@ -18,6 +20,15 @@ function App() {
           element={
             <ProtectedRoute>
               <ProfilePage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/my-applications"
+          element={
+            <ProtectedRoute>
+              <MyApplicationsPage />
             </ProtectedRoute>
           }
         />
