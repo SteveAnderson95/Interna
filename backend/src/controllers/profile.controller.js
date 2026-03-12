@@ -120,9 +120,50 @@ const getMyProfile = async (req, res) => {
   }
 };
 
+const updateStudentProfile = async (req, res) => {
+  try {
+    const { firstName, lastName, fieldOfStudy, studyLevel, city, cvUrl, schoolId } = req.body;
+
+    const existingProfile = await prisma.student.findUnique({
+      where: { userId: req.user.userId },
+    });
+
+    if (!existingProfile) {
+      return res.status(404).json({
+        message: "Student profile not found",
+      });
+    }
+
+    const updatedProfile = await prisma.student.update({
+      where: { userId: req.user.userId },
+      data: {
+        firstName,
+        lastName,
+        fieldOfStudy,
+        studyLevel,
+        city,
+        cvUrl,
+        schoolId,
+      },
+    });
+
+    return res.json({
+      message: "Student profile updated",
+      profile: updatedProfile,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: "Server error",
+    });
+  }
+};
+
+
+
 module.exports = {
   createStudentProfile,
   createCompanyProfile,
   createSchoolProfile,
   getMyProfile,
+  updateStudentProfile,
 };

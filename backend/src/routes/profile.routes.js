@@ -6,6 +6,7 @@ const {
   createCompanyProfile,
   createSchoolProfile,
   getMyProfile,
+  updateStudentProfile,
 } = require("../controllers/profile.controller");
 
 const router = express.Router();
@@ -32,5 +33,13 @@ router.post(
   authorizeRoles("SCHOOL"),
   createSchoolProfile
 );
+
+router.patch(
+  "/student",
+  authenticate,
+  authorizeRoles("STUDENT"),
+  updateStudentProfile
+);
+
 
 module.exports = router;
