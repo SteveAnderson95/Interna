@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../services/api";
+import { Link } from "react-router-dom";
+
 
 function DashboardPage() {
   const navigate = useNavigate();
@@ -39,6 +41,10 @@ function DashboardPage() {
       <div>
         <p>{error}</p>
         <button onClick={handleLogout}>Retour à la connexion</button>
+        <p>
+            <Link to="/profile">Aller à mon profil</Link>
+        </p>
+
       </div>
     );
   }
