@@ -92,6 +92,73 @@ const createSchoolProfile = async (req, res) => {
   }
 };
 
+const updateCompanyProfile = async (req, res) => {
+  try {
+    const { name, city, description } = req.body;
+
+    const existingProfile = await prisma.company.findUnique({
+      where: { userId: req.user.userId },
+    });
+
+    if (!existingProfile) {
+      return res.status(404).json({
+        message: "Company profile not found",
+      });
+    }
+
+    const updatedProfile = await prisma.company.update({
+      where: { userId: req.user.userId },
+      data: {
+        name,
+        city,
+        description,
+      },
+    });
+
+    return res.json({
+      message: "Company profile updated",
+      profile: updatedProfile,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: "Server error",
+    });
+  }
+};
+
+const updateSchoolProfile = async (req, res) => {
+  try {
+    const { name, city } = req.body;
+
+    const existingProfile = await prisma.school.findUnique({
+      where: { userId: req.user.userId },
+    });
+
+    if (!existingProfile) {
+      return res.status(404).json({
+        message: "School profile not found",
+      });
+    }
+
+    const updatedProfile = await prisma.school.update({
+      where: { userId: req.user.userId },
+      data: {
+        name,
+        city,
+      },
+    });
+
+    return res.json({
+      message: "School profile updated",
+      profile: updatedProfile,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: "Server error",
+    });
+  }
+};
+
 const getMyProfile = async (req, res) => {
   try {
     const user = await prisma.user.findUnique({
@@ -165,5 +232,7 @@ module.exports = {
   createCompanyProfile,
   createSchoolProfile,
   getMyProfile,
+  updateCompanyProfile,
+  updateSchoolProfile,
   updateStudentProfile,
 };

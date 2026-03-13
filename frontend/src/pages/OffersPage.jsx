@@ -7,13 +7,11 @@ function OffersPage() {
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [selectedOfferId, setSelectedOfferId] = useState(null);
+  const [motivationLetterFile, setMotivationLetterFile] = useState(null);
+  const [conventionFile, setConventionFile] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
 
-  const [applicationData, setApplicationData] = useState({
-    motivationLetterUrl: "",
-    conventionUrl: "",
-  });
-
-  const storedUser = JSON.parse(localStorage.getItem("user"));
+  const storedUser = JSON.parse(localStorage.getItem("user") || "null");
 
   useEffect(() => {
     const fetchOffers = async () => {
@@ -30,32 +28,55 @@ function OffersPage() {
     fetchOffers();
   }, []);
 
-  const handleChange = (event) => {
-    setApplicationData({
-      ...applicationData,
-      [event.target.name]: event.target.value,
+  const uploadFile = async (endpoint, file) => {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const response = await api.post(endpoint, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
     });
+
+    return response.data.filePath;
+  };
+
+  const resetApplicationForm = () => {
+    setSelectedOfferId(null);
+    setMotivationLetterFile(null);
+    setConventionFile(null);
   };
 
   const handleApply = async (offerId) => {
     setError("");
     setMessage("");
 
+    if (!motivationLetterFile || !conventionFile) {
+      setError("Ajoute la lettre de motivation et la convention avant d'envoyer");
+      return;
+    }
+
+    setSubmitting(true);
+
     try {
+      const motivationLetterUrl = await uploadFile(
+        "/api/upload/motivation-letter",
+        motivationLetterFile
+      );
+      const conventionUrl = await uploadFile("/api/upload/convention", conventionFile);
+
       await api.post("/api/applications", {
         internshipOfferId: offerId,
-        motivationLetterUrl: applicationData.motivationLetterUrl,
-        conventionUrl: applicationData.conventionUrl,
+        motivationLetterUrl,
+        conventionUrl,
       });
 
-      setMessage("Candidature envoyée avec succès");
-      setSelectedOfferId(null);
-      setApplicationData({
-        motivationLetterUrl: "",
-        conventionUrl: "",
-      });
+      setMessage("Candidature envoyee avec succes");
+      resetApplicationForm();
     } catch (err) {
       setError(err.response?.data?.message || "Erreur lors de la candidature");
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -82,37 +103,52 @@ function OffersPage() {
             <div key={offer.id}>
               <h2>{offer.title}</h2>
               <p>{offer.description}</p>
-              <p>Filière : {offer.fieldOfStudy}</p>
+              <p>Filiere : {offer.fieldOfStudy}</p>
               <p>Niveau : {offer.studyLevel}</p>
-              <p>Ville : {offer.city || "Non précisée"}</p>
+              <p>Ville : {offer.city || "Non precisee"}</p>
               <p>Entreprise : {offer.company?.name}</p>
 
               {storedUser?.role === "STUDENT" && (
                 <div>
-                  <button onClick={() => setSelectedOfferId(offer.id)}>
+                  <button
+                    onClick={() => {
+                      setError("");
+                      setMessage("");
+                      setSelectedOfferId(offer.id);
+                    }}
+                  >
                     Postuler
                   </button>
 
                   {selectedOfferId === offer.id && (
                     <div>
-                      <input
-                        type="text"
-                        name="motivationLetterUrl"
-                        placeholder="URL lettre de motivation"
-                        value={applicationData.motivationLetterUrl}
-                        onChange={handleChange}
-                      />
+                      <div>
+                        <label>Lettre de motivation</label>
+                        <input
+                          type="file"
+                          accept=".pdf,.doc,.docx"
+                          onChange={(event) =>
+                            setMotivationLetterFile(event.target.files?.[0] || null)
+                          }
+                        />
+                      </div>
 
-                      <input
-                        type="text"
-                        name="conventionUrl"
-                        placeholder="URL convention"
-                        value={applicationData.conventionUrl}
-                        onChange={handleChange}
-                      />
+                      <div>
+                        <label>Convention</label>
+                        <input
+                          type="file"
+                          accept=".pdf,.doc,.docx"
+                          onChange={(event) =>
+                            setConventionFile(event.target.files?.[0] || null)
+                          }
+                        />
+                      </div>
 
-                      <button onClick={() => handleApply(offer.id)}>
-                        Envoyer la candidature
+                      <button
+                        onClick={() => handleApply(offer.id)}
+                        disabled={submitting}
+                      >
+                        {submitting ? "Envoi..." : "Envoyer la candidature"}
                       </button>
                     </div>
                   )}

@@ -1,12 +1,9 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import api from "../services/api";
-import { Link } from "react-router-dom";
-
 
 function DashboardPage() {
   const navigate = useNavigate();
-
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -22,8 +19,9 @@ function DashboardPage() {
       try {
         const response = await api.get("/api/auth/me");
         setUser(response.data.user);
+        localStorage.setItem("user", JSON.stringify(response.data.user));
       } catch (err) {
-        setError("Impossible de récupérer l'utilisateur");
+        setError("Impossible de recuperer l'utilisateur");
       } finally {
         setLoading(false);
       }
@@ -40,7 +38,7 @@ function DashboardPage() {
     return (
       <div>
         <p>{error}</p>
-        <button onClick={handleLogout}>Retour à la connexion</button>
+        <button onClick={handleLogout}>Retour a la connexion</button>
       </div>
     );
   }
@@ -53,35 +51,36 @@ function DashboardPage() {
       {user && (
         <>
           <p>Email : {user.email}</p>
-          <p>Rôle : {user.role}</p>
+          <p>Role : {user.role}</p>
         </>
       )}
 
-      {user?.role === "COMPANY" && (
-        <p>
-            <Link to="/company/applications">Voir les candidatures reçues</Link>
-        </p>
-      )}
+      <p>
+        <Link to="/profile">Mon profil</Link>
+      </p>
 
-      {user?.role === "COMPANY" && (
-        <p>
-            <Link to="/company/offers/create">Créer une offre</Link>
-        </p>
-      )}
-
-
-      <button onClick={handleLogout}>Logout</button>
       <p>
         <Link to="/offers">Voir les offres</Link>
-        </p>
-        <p>
-            <Link to="/profile">Aller à mon profil</Link>
-        </p>
-        <p>
-            <Link to="/my-applications">Voir mes candidatures</Link>
-        </p>
+      </p>
 
+      {user?.role === "STUDENT" && (
+        <p>
+          <Link to="/my-applications">Voir mes candidatures</Link>
+        </p>
+      )}
 
+      {user?.role === "COMPANY" && (
+        <>
+          <p>
+            <Link to="/company/offers/create">Creer une offre</Link>
+          </p>
+          <p>
+            <Link to="/company/applications">Voir les candidatures recues</Link>
+          </p>
+        </>
+      )}
+
+      <button onClick={handleLogout}>Logout</button>
     </div>
   );
 }

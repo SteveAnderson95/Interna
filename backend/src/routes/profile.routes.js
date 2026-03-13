@@ -6,6 +6,8 @@ const {
   createCompanyProfile,
   createSchoolProfile,
   getMyProfile,
+  updateCompanyProfile,
+  updateSchoolProfile,
   updateStudentProfile,
 } = require("../controllers/profile.controller");
 
@@ -39,6 +41,20 @@ router.patch(
   authenticate,
   authorizeRoles("STUDENT"),
   updateStudentProfile
+);
+
+router.patch(
+  "/company",
+  authenticate,
+  authorizeRoles("COMPANY"),
+  updateCompanyProfile
+);
+
+router.patch(
+  "/school",
+  authenticate,
+  authorizeRoles("SCHOOL"),
+  updateSchoolProfile
 );
 
 

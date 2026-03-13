@@ -8,6 +8,8 @@ const profileRoutes = require("./routes/profile.routes");
 const offerRoutes = require("./routes/offer.routes");
 const applicationRoutes = require("./routes/application.routes");
 const companyRoutes = require("./routes/company.routes");
+const path = require("path");
+const uploadRoutes = require("./routes/upload.routes");
 
 
 
@@ -20,6 +22,8 @@ app.use("/api/profile", profileRoutes);
 app.use("/api/offers", offerRoutes);
 app.use("/api/applications", applicationRoutes);
 app.use("/api/company", companyRoutes);
+app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
+app.use("/api/upload", uploadRoutes);
 
 
 
@@ -72,5 +76,14 @@ app.get("/api/admin/test", authenticate, authorizeRoles("ADMIN"), (req, res) => 
   res.json({ message: "Admin access granted" });
 });
 
+app.use((error, req, res, next) => {
+  if (error) {
+    return res.status(400).json({
+      message: error.message || "Request error",
+    });
+  }
+
+  next();
+});
 
 module.exports = app;
