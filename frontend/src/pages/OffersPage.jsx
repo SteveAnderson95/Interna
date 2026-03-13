@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import api from "../services/api";
 
@@ -52,7 +53,7 @@ function OffersPage() {
     setMessage("");
 
     if (!motivationLetterFile || !conventionFile) {
-      setError("Ajoute la lettre de motivation et la convention avant d'envoyer");
+      setError("Ajoute la lettre de motivation et la convention avant l'envoi");
       return;
     }
 
@@ -81,36 +82,57 @@ function OffersPage() {
   };
 
   if (loading) {
-    return <p>Chargement des offres...</p>;
+    return (
+      <div className="page-shell">
+        <div className="empty-state">Chargement des offres...</div>
+      </div>
+    );
   }
 
   if (error && offers.length === 0) {
-    return <p>{error}</p>;
+    return (
+      <div className="page-shell">
+        <div className="message message-error">{error}</div>
+      </div>
+    );
   }
 
   return (
-    <div>
-      <h1>Offres de stage</h1>
+    <div className="page-shell">
+      <div className="top-bar">
+        <div>
+          <span className="eyebrow">Catalogue</span>
+          <h1 className="page-title">Offres de stage</h1>
+        </div>
+        <Link className="button button-ghost" to="/dashboard">
+          Retour dashboard
+        </Link>
+      </div>
 
-      {message && <p>{message}</p>}
-      {error && <p>{error}</p>}
+      {message && <p className="message message-success">{message}</p>}
+      {error && <p className="message message-error">{error}</p>}
 
       {offers.length === 0 ? (
-        <p>Aucune offre disponible.</p>
+        <div className="empty-state">Aucune offre disponible.</div>
       ) : (
-        <div>
+        <div className="card-grid cards-tight">
           {offers.map((offer) => (
-            <div key={offer.id}>
-              <h2>{offer.title}</h2>
+            <article className="record-card" key={offer.id}>
+              <h3>{offer.title}</h3>
               <p>{offer.description}</p>
-              <p>Filiere : {offer.fieldOfStudy}</p>
-              <p>Niveau : {offer.studyLevel}</p>
-              <p>Ville : {offer.city || "Non precisee"}</p>
+
+              <div className="record-meta">
+                <span className="pill">{offer.fieldOfStudy}</span>
+                <span className="pill">{offer.studyLevel}</span>
+                <span className="pill">{offer.city || "Ville non precisee"}</span>
+              </div>
+
               <p>Entreprise : {offer.company?.name}</p>
 
               {storedUser?.role === "STUDENT" && (
-                <div>
+                <div className="card-actions" style={{ marginTop: 18 }}>
                   <button
+                    className="button button-secondary"
                     onClick={() => {
                       setError("");
                       setMessage("");
@@ -119,42 +141,56 @@ function OffersPage() {
                   >
                     Postuler
                   </button>
-
-                  {selectedOfferId === offer.id && (
-                    <div>
-                      <div>
-                        <label>Lettre de motivation</label>
-                        <input
-                          type="file"
-                          accept=".pdf,.doc,.docx"
-                          onChange={(event) =>
-                            setMotivationLetterFile(event.target.files?.[0] || null)
-                          }
-                        />
-                      </div>
-
-                      <div>
-                        <label>Convention</label>
-                        <input
-                          type="file"
-                          accept=".pdf,.doc,.docx"
-                          onChange={(event) =>
-                            setConventionFile(event.target.files?.[0] || null)
-                          }
-                        />
-                      </div>
-
-                      <button
-                        onClick={() => handleApply(offer.id)}
-                        disabled={submitting}
-                      >
-                        {submitting ? "Envoi..." : "Envoyer la candidature"}
-                      </button>
-                    </div>
-                  )}
                 </div>
               )}
-            </div>
+
+              {selectedOfferId === offer.id && storedUser?.role === "STUDENT" && (
+                <div className="surface-card" style={{ marginTop: 18, padding: 18 }}>
+                  <div className="form-grid single">
+                    <div className="form-field">
+                      <label>Lettre de motivation</label>
+                      <input
+                        className="file-input"
+                        type="file"
+                        accept=".pdf,.doc,.docx"
+                        onChange={(event) =>
+                          setMotivationLetterFile(event.target.files?.[0] || null)
+                        }
+                      />
+                    </div>
+
+                    <div className="form-field">
+                      <label>Convention</label>
+                      <input
+                        className="file-input"
+                        type="file"
+                        accept=".pdf,.doc,.docx"
+                        onChange={(event) =>
+                          setConventionFile(event.target.files?.[0] || null)
+                        }
+                      />
+                    </div>
+                  </div>
+
+                  <div className="button-row" style={{ marginTop: 14 }}>
+                    <button
+                      className="button button-primary"
+                      onClick={() => handleApply(offer.id)}
+                      disabled={submitting}
+                    >
+                      {submitting ? "Envoi..." : "Envoyer la candidature"}
+                    </button>
+                    <button
+                      className="button button-ghost"
+                      onClick={resetApplicationForm}
+                      type="button"
+                    >
+                      Annuler
+                    </button>
+                  </div>
+                </div>
+              )}
+            </article>
           ))}
         </div>
       )}

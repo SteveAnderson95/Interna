@@ -1,5 +1,10 @@
+import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import api from "../services/api";
+
+function getStatusClass(status) {
+  return `status-pill status-${status.toLowerCase()}`;
+}
 
 function MyApplicationsPage() {
   const [applications, setApplications] = useState([]);
@@ -22,29 +27,57 @@ function MyApplicationsPage() {
   }, []);
 
   if (loading) {
-    return <p>Chargement des candidatures...</p>;
+    return (
+      <div className="page-shell">
+        <div className="empty-state">Chargement des candidatures...</div>
+      </div>
+    );
   }
 
   if (error) {
-    return <p>{error}</p>;
+    return (
+      <div className="page-shell">
+        <div className="message message-error">{error}</div>
+      </div>
+    );
   }
 
   return (
-    <div>
-      <h1>Mes candidatures</h1>
+    <div className="page-shell">
+      <div className="top-bar">
+        <div>
+          <span className="eyebrow">Etudiant</span>
+          <h1 className="page-title">Mes candidatures</h1>
+        </div>
+        <Link className="button button-ghost" to="/dashboard">
+          Retour dashboard
+        </Link>
+      </div>
 
       {applications.length === 0 ? (
-        <p>Aucune candidature envoyée.</p>
+        <div className="empty-state">
+          Aucune candidature envoyee pour le moment.
+        </div>
       ) : (
-        <div>
+        <div className="card-grid cards-tight">
           {applications.map((application) => (
-            <div key={application.id}>
-              <h2>{application.internshipOffer.title}</h2>
-              <p>Entreprise : {application.internshipOffer.company?.name}</p>
-              <p>Ville : {application.internshipOffer.city || "Non précisée"}</p>
-              <p>Statut : {application.status}</p>
-              <p>Envoyée le : {new Date(application.createdAt).toLocaleDateString()}</p>
-            </div>
+            <article className="record-card" key={application.id}>
+              <h3>{application.internshipOffer.title}</h3>
+              <div className="record-meta">
+                <span className={getStatusClass(application.status)}>
+                  {application.status}
+                </span>
+                <span className="pill">
+                  {application.internshipOffer.company?.name || "Entreprise"}
+                </span>
+              </div>
+              <p>Ville : {application.internshipOffer.city || "Non precisee"}</p>
+              <p>
+                Envoyee le :
+                {" "}
+                {new Date(application.createdAt).toLocaleDateString()}
+              </p>
+            </article>
           ))}
         </div>
       )}
