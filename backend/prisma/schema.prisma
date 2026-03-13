@@ -48,6 +48,7 @@ model Student {
   user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   school       School?       @relation(fields: [schoolId], references: [id])
   applications Application[]
+  internships  Internship[]
 }
 
 model Company {
@@ -59,6 +60,7 @@ model Company {
 
   user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
   offers      InternshipOffer[]
+  internships Internship[]
 }
 
 model School {
@@ -97,7 +99,33 @@ model Application {
 
   student             Student           @relation(fields: [studentId], references: [id], onDelete: Cascade)
   internshipOffer     InternshipOffer   @relation(fields: [internshipOfferId], references: [id], onDelete: Cascade)
+  internship          Internship?
 
   @@unique([studentId, internshipOfferId])
 }
 
+model Internship {
+  id            Int          @id @default(autoincrement())
+  applicationId Int          @unique
+  studentId     Int
+  companyId     Int
+  title         String
+  status        String       @default("en_cours")
+  startedAt     DateTime     @default(now())
+  createdAt     DateTime     @default(now())
+
+  application   Application  @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  student       Student      @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  company       Company      @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  deliverables  Deliverable[]
+}
+
+model Deliverable {
+  id           Int        @id @default(autoincrement())
+  internshipId Int
+  title        String
+  fileUrl      String
+  createdAt    DateTime   @default(now())
+
+  internship   Internship @relation(fields: [internshipId], references: [id], onDelete: Cascade)
+}

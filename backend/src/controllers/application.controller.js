@@ -193,6 +193,22 @@ const updateApplicationStatus = async (req, res) => {
       data: { status },
     });
 
+    if (status === "ACCEPTEE") {
+      await prisma.internship.upsert({
+        where: { applicationId: application.id },
+        update: {
+          status: "en_cours",
+        },
+        create: {
+          applicationId: application.id,
+          studentId: application.studentId,
+          companyId: company.id,
+          title: application.internshipOffer.title,
+          status: "en_cours",
+        },
+      });
+    }
+
     return res.json({
       message: "Application status updated",
       application: updatedApplication,

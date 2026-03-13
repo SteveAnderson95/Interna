@@ -10,6 +10,8 @@ const applicationRoutes = require("./routes/application.routes");
 const companyRoutes = require("./routes/company.routes");
 const path = require("path");
 const uploadRoutes = require("./routes/upload.routes");
+const internshipRoutes = require("./routes/internship.routes");
+const deliverableRoutes = require("./routes/deliverable.routes");
 
 
 
@@ -24,6 +26,8 @@ app.use("/api/applications", applicationRoutes);
 app.use("/api/company", companyRoutes);
 app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 app.use("/api/upload", uploadRoutes);
+app.use("/api/internships", internshipRoutes);
+app.use("/api/deliverables", deliverableRoutes);
 
 
 

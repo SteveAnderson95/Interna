@@ -50,6 +50,12 @@ function DashboardPage() {
       roles: ["STUDENT"],
     },
     {
+      label: "Mon stage",
+      description: "Consulter le stage accepte et deposer le rapport.",
+      to: "/my-internship",
+      roles: ["STUDENT"],
+    },
+    {
       label: "Creer une offre",
       description: "Publier rapidement un nouveau stage.",
       to: "/company/offers/create",
