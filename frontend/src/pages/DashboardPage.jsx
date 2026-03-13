@@ -67,6 +67,12 @@ function DashboardPage() {
       to: "/company/applications",
       roles: ["COMPANY"],
     },
+    {
+      label: "Stages acceptes",
+      description: "Generer l'attestation et la fiche d'evaluation.",
+      to: "/company/internships",
+      roles: ["COMPANY"],
+    },
   ];
 
   if (loading) {

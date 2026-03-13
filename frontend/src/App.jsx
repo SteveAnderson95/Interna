@@ -11,6 +11,7 @@ import MyApplicationsPage from "./pages/MyApplicationsPage";
 import CompanyApplicationsPage from "./pages/CompanyApplicationsPage";
 import CreateOfferPage from "./pages/CreateOfferPage";
 import MyInternshipPage from "./pages/MyInternshipPage";
+import CompanyInternshipsPage from "./pages/CompanyInternshipsPage";
 
 
 function App() {
@@ -43,6 +44,15 @@ function App() {
           element={
             <ProtectedRoute>
               <CompanyApplicationsPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/company/internships"
+          element={
+            <ProtectedRoute>
+              <CompanyInternshipsPage />
             </ProtectedRoute>
           }
         />

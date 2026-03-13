@@ -1,4 +1,5 @@
 const prisma = require("../config/prisma");
+const { sendEmail } = require("../services/email.service");
 
 const createApplication = async (req, res) => {
   try {
@@ -173,6 +174,11 @@ const updateApplicationStatus = async (req, res) => {
       where: { id: applicationId },
       include: {
         internshipOffer: true,
+        student: {
+          include: {
+            user: true,
+          },
+        },
       },
     });
 
@@ -207,6 +213,27 @@ const updateApplicationStatus = async (req, res) => {
           status: "en_cours",
         },
       });
+    }
+
+    if (application.student?.user?.email) {
+      const subject =
+        status === "ACCEPTEE"
+          ? "Votre candidature a ete acceptee"
+          : "Mise a jour de votre candidature";
+      const text =
+        status === "ACCEPTEE"
+          ? `Votre candidature pour "${application.internshipOffer.title}" a ete acceptee.`
+          : `Votre candidature pour "${application.internshipOffer.title}" a ete mise a jour avec le statut ${status}.`;
+
+      try {
+        await sendEmail({
+          to: application.student.user.email,
+          subject,
+          text,
+        });
+      } catch (emailError) {
+        console.error("Email notification failed:", emailError.message);
+      }
     }
 
     return res.json({
