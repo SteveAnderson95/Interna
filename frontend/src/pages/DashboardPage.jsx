@@ -57,6 +57,12 @@ function DashboardPage() {
         </>
       )}
 
+      {user?.role === "COMPANY" && (
+        <p>
+            <Link to="/company/applications">Voir les candidatures reçues</Link>
+        </p>
+      )}
+
       <button onClick={handleLogout}>Logout</button>
       <p>
         <Link to="/offers">Voir les offres</Link>
