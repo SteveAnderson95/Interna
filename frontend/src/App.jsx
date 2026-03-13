@@ -8,6 +8,7 @@ import ProfilePage from "./pages/ProfilePage";
 import OffersPage from "./pages/OffersPage";
 import MyApplicationsPage from "./pages/MyApplicationsPage";
 import CompanyApplicationsPage from "./pages/CompanyApplicationsPage";
+import CreateOfferPage from "./pages/CreateOfferPage";
 
 
 function App() {
@@ -24,6 +25,16 @@ function App() {
             </ProtectedRoute>
           }
         />
+
+        <Route
+          path="/company/offers/create"
+          element={
+            <ProtectedRoute>
+              <CreateOfferPage />
+            </ProtectedRoute>
+          }
+        />
+
 
         <Route
           path="/company/applications"
