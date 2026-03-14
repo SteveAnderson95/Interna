@@ -8,7 +8,10 @@ function CreateOfferPage() {
     description: "",
     fieldOfStudy: "",
     studyLevel: "",
+    duration: "",
+    internshipType: "",
     city: "",
+    deadline: "",
   });
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -33,7 +36,10 @@ function CreateOfferPage() {
         description: "",
         fieldOfStudy: "",
         studyLevel: "",
+        duration: "",
+        internshipType: "",
         city: "",
+        deadline: "",
       });
     } catch (err) {
       setError(err.response?.data?.message || "Erreur lors de la creation de l'offre");
@@ -111,7 +117,33 @@ function CreateOfferPage() {
               />
             </div>
 
-            <div className="form-field full">
+            <div className="form-field">
+              <label htmlFor="offer-duration">Duree</label>
+              <input
+                id="offer-duration"
+                className="input"
+                type="text"
+                name="duration"
+                value={formData.duration}
+                onChange={handleChange}
+                placeholder="2 a 6 mois"
+              />
+            </div>
+
+            <div className="form-field">
+              <label htmlFor="offer-type">Type de stage</label>
+              <input
+                id="offer-type"
+                className="input"
+                type="text"
+                name="internshipType"
+                value={formData.internshipType}
+                onChange={handleChange}
+                placeholder="PFE, initiation, pre-embauche"
+              />
+            </div>
+
+            <div className="form-field">
               <label htmlFor="offer-city">Ville</label>
               <input
                 id="offer-city"
@@ -121,6 +153,18 @@ function CreateOfferPage() {
                 value={formData.city}
                 onChange={handleChange}
                 placeholder="Casablanca"
+              />
+            </div>
+
+            <div className="form-field">
+              <label htmlFor="offer-deadline">Date limite</label>
+              <input
+                id="offer-deadline"
+                className="input"
+                type="date"
+                name="deadline"
+                value={formData.deadline}
+                onChange={handleChange}
               />
             </div>
           </div>

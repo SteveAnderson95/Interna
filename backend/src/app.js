@@ -12,6 +12,9 @@ const path = require("path");
 const uploadRoutes = require("./routes/upload.routes");
 const internshipRoutes = require("./routes/internship.routes");
 const deliverableRoutes = require("./routes/deliverable.routes");
+const schoolRoutes = require("./routes/school.routes");
+const adminRoutes = require("./routes/admin.routes");
+const matchingRoutes = require("./routes/matching.routes");
 
 
 
@@ -28,6 +31,9 @@ app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 app.use("/api/upload", uploadRoutes);
 app.use("/api/internships", internshipRoutes);
 app.use("/api/deliverables", deliverableRoutes);
+app.use("/api/school", schoolRoutes);
+app.use("/api/admin", adminRoutes);
+app.use("/api/matching", matchingRoutes);
 
 
 
@@ -56,6 +62,7 @@ app.get("/api/auth/me", authenticate, async (req, res) => {
         id: true,
         email: true,
         role: true,
+        active: true,
       },
     });
 

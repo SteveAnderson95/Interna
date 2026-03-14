@@ -2,7 +2,8 @@ const fs = require("fs");
 const multer = require("multer");
 const path = require("path");
 
-const ALLOWED_EXTENSIONS = [".pdf", ".doc", ".docx"];
+const DOCUMENT_EXTENSIONS = [".pdf", ".doc", ".docx"];
+const IMAGE_EXTENSIONS = [".png", ".jpg", ".jpeg", ".webp"];
 
 const ensureDirectory = (dirPath) => {
   fs.mkdirSync(dirPath, { recursive: true });
@@ -24,23 +25,25 @@ const createStorage = (folder) =>
     },
   });
 
-const fileFilter = (req, file, cb) => {
+const createFileFilter = (allowedExtensions) => (req, file, cb) => {
   const extension = path.extname(file.originalname).toLowerCase();
 
-  if (!ALLOWED_EXTENSIONS.includes(extension)) {
-    cb(new Error("Only PDF, DOC and DOCX files are allowed"));
+  if (!allowedExtensions.includes(extension)) {
+    cb(new Error("Invalid file type"));
     return;
   }
 
   cb(null, true);
 };
 
-const createUploader = (folder) =>
+const createUploader = (folder, allowedExtensions = DOCUMENT_EXTENSIONS) =>
   multer({
     storage: createStorage(folder),
-    fileFilter,
+    fileFilter: createFileFilter(allowedExtensions),
   });
 
 module.exports = {
   createUploader,
+  DOCUMENT_EXTENSIONS,
+  IMAGE_EXTENSIONS,
 };

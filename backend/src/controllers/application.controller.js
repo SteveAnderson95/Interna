@@ -13,6 +13,9 @@ const createApplication = async (req, res) => {
 
     const student = await prisma.student.findUnique({
       where: { userId: req.user.userId },
+      include: {
+        user: true,
+      },
     });
 
     if (!student) {
@@ -29,6 +32,13 @@ const createApplication = async (req, res) => {
 
     const offer = await prisma.internshipOffer.findUnique({
       where: { id: Number(internshipOfferId) },
+      include: {
+        company: {
+          include: {
+            user: true,
+          },
+        },
+      },
     });
 
     if (!offer) {
@@ -60,6 +70,32 @@ const createApplication = async (req, res) => {
         conventionUrl,
       },
     });
+
+    const notifications = [];
+
+    if (student.user?.email) {
+      notifications.push(
+        sendEmail({
+          to: student.user.email,
+          subject: "Candidature envoyee",
+          text: `Votre candidature pour "${offer.title}" a bien ete envoyee.`,
+        })
+      );
+    }
+
+    if (offer.company?.user?.email) {
+      notifications.push(
+        sendEmail({
+          to: offer.company.user.email,
+          subject: "Nouvelle candidature recue",
+          text: `Une nouvelle candidature a ete envoyee pour l'offre "${offer.title}".`,
+        })
+      );
+    }
+
+    if (notifications.length) {
+      await Promise.allSettled(notifications);
+    }
 
     return res.status(201).json({
       message: "Application created successfully",
@@ -131,8 +167,26 @@ const getCompanyApplications = async (req, res) => {
         },
       },
       include: {
-        student: true,
-        internshipOffer: true,
+        student: {
+          include: {
+            school: true,
+            user: {
+              select: {
+                email: true,
+              },
+            },
+          },
+        },
+        internshipOffer: {
+          include: {
+            company: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
       },
       orderBy: {
         createdAt: "desc",

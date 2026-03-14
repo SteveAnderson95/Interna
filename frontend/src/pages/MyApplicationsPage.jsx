@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import api from "../services/api";
 
@@ -7,6 +7,7 @@ function getStatusClass(status) {
 }
 
 function MyApplicationsPage() {
+  const navigate = useNavigate();
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -17,7 +18,9 @@ function MyApplicationsPage() {
         const response = await api.get("/api/applications/my");
         setApplications(response.data.applications);
       } catch (err) {
-        setError("Impossible de charger les candidatures");
+        setError(
+          err.response?.data?.message || "Impossible de charger les candidatures"
+        );
       } finally {
         setLoading(false);
       }
@@ -38,6 +41,13 @@ function MyApplicationsPage() {
     return (
       <div className="page-shell">
         <div className="message message-error">{error}</div>
+        {error === "Student profile not found" && (
+          <div className="button-row">
+            <button className="button button-primary" onClick={() => navigate("/profile")}>
+              Completer mon profil
+            </button>
+          </div>
+        )}
       </div>
     );
   }

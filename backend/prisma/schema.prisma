@@ -26,6 +26,7 @@ model User {
   email     String   @unique
   password  String
   role      UserRole
+  active    Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -43,7 +44,10 @@ model Student {
   fieldOfStudy String
   studyLevel   String
   city         String?
+  phone        String?
+  bio          String?
   cvUrl        String?
+  photoUrl     String?
 
   user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   school       School?       @relation(fields: [schoolId], references: [id])
@@ -55,8 +59,15 @@ model Company {
   id          Int               @id @default(autoincrement())
   userId      Int               @unique
   name        String
+  sector      String?
   city        String?
   description String?
+  phone       String?
+  website     String?
+  address     String?
+  contactName String?
+  photoUrl    String?
+  galleryUrls Json?
 
   user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
   offers      InternshipOffer[]
@@ -68,6 +79,10 @@ model School {
   userId   Int       @unique
   name     String
   city     String?
+  phone    String?
+  website  String?
+  address  String?
+  photoUrl String?
 
   user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   students Student[]
@@ -80,9 +95,13 @@ model InternshipOffer {
   description  String
   fieldOfStudy String
   studyLevel   String
+  duration     String?
+  internshipType String?
   city         String?
   status       String        @default("ouverte")
+  deadline     DateTime?
   createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @default(now()) @updatedAt
 
   company      Company       @relation(fields: [companyId], references: [id], onDelete: Cascade)
   applications Application[]
@@ -95,6 +114,7 @@ model Application {
   motivationLetterUrl String
   conventionUrl       String
   status              ApplicationStatus @default(EN_ATTENTE)
+  blockReason         String?
   createdAt           DateTime          @default(now())
 
   student             Student           @relation(fields: [studentId], references: [id], onDelete: Cascade)
@@ -112,12 +132,14 @@ model Internship {
   title         String
   status        String       @default("en_cours")
   startedAt     DateTime     @default(now())
+  validatedAt   DateTime?
   createdAt     DateTime     @default(now())
 
   application   Application  @relation(fields: [applicationId], references: [id], onDelete: Cascade)
   student       Student      @relation(fields: [studentId], references: [id], onDelete: Cascade)
   company       Company      @relation(fields: [companyId], references: [id], onDelete: Cascade)
   deliverables  Deliverable[]
+  evaluation    Evaluation?
 }
 
 model Deliverable {
@@ -125,6 +147,15 @@ model Deliverable {
   internshipId Int
   title        String
   fileUrl      String
+  createdAt    DateTime   @default(now())
+
+  internship   Internship @relation(fields: [internshipId], references: [id], onDelete: Cascade)
+}
+
+model Evaluation {
+  id           Int        @id @default(autoincrement())
+  internshipId Int        @unique
+  notes        String?
   createdAt    DateTime   @default(now())
 
   internship   Internship @relation(fields: [internshipId], references: [id], onDelete: Cascade)

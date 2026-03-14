@@ -1,4 +1,5 @@
 const prisma = require("../config/prisma");
+const { sendEmail } = require("../services/email.service");
 
 const createReportDeliverable = async (req, res) => {
   try {
@@ -22,6 +23,18 @@ const createReportDeliverable = async (req, res) => {
 
     const internship = await prisma.internship.findFirst({
       where: { studentId: student.id },
+      include: {
+        student: {
+          include: {
+            school: {
+              include: {
+                user: true,
+              },
+            },
+            user: true,
+          },
+        },
+      },
       orderBy: {
         createdAt: "desc",
       },
@@ -40,6 +53,32 @@ const createReportDeliverable = async (req, res) => {
         fileUrl,
       },
     });
+
+    const notifications = [];
+
+    if (internship.student.user?.email) {
+      notifications.push(
+        sendEmail({
+          to: internship.student.user.email,
+          subject: "Livrable depose",
+          text: `Votre livrable "${title}" a bien ete enregistre.`,
+        })
+      );
+    }
+
+    if (internship.student.school?.user?.email) {
+      notifications.push(
+        sendEmail({
+          to: internship.student.school.user.email,
+          subject: "Nouveau livrable depose",
+          text: `Un nouveau livrable "${title}" a ete depose par un etudiant rattache a votre ecole.`,
+        })
+      );
+    }
+
+    if (notifications.length) {
+      await Promise.allSettled(notifications);
+    }
 
     return res.status(201).json({
       message: "Deliverable uploaded successfully",

@@ -2,7 +2,18 @@ const prisma = require("../config/prisma");
 
 const createStudentProfile = async (req, res) => {
   try {
-    const { firstName, lastName, fieldOfStudy, studyLevel, city, schoolId } = req.body;
+    const {
+      firstName,
+      lastName,
+      fieldOfStudy,
+      studyLevel,
+      city,
+      phone,
+      bio,
+      cvUrl,
+      photoUrl,
+      schoolId,
+    } = req.body;
 
     const existingProfile = await prisma.student.findUnique({
       where: { userId: req.user.userId },
@@ -20,6 +31,10 @@ const createStudentProfile = async (req, res) => {
         fieldOfStudy,
         studyLevel,
         city,
+        phone,
+        bio,
+        cvUrl,
+        photoUrl,
         schoolId,
       },
     });
@@ -35,7 +50,18 @@ const createStudentProfile = async (req, res) => {
 
 const createCompanyProfile = async (req, res) => {
   try {
-    const { name, city, description } = req.body;
+    const {
+      name,
+      sector,
+      city,
+      description,
+      phone,
+      website,
+      address,
+      contactName,
+      photoUrl,
+      galleryUrls,
+    } = req.body;
 
     const existingProfile = await prisma.company.findUnique({
       where: { userId: req.user.userId },
@@ -49,8 +75,15 @@ const createCompanyProfile = async (req, res) => {
       data: {
         userId: req.user.userId,
         name,
+        sector,
         city,
         description,
+        phone,
+        website,
+        address,
+        contactName,
+        photoUrl,
+        galleryUrls,
       },
     });
 
@@ -65,7 +98,7 @@ const createCompanyProfile = async (req, res) => {
 
 const createSchoolProfile = async (req, res) => {
   try {
-    const { name, city } = req.body;
+    const { name, city, phone, website, address, photoUrl } = req.body;
 
     const existingProfile = await prisma.school.findUnique({
       where: { userId: req.user.userId },
@@ -80,6 +113,10 @@ const createSchoolProfile = async (req, res) => {
         userId: req.user.userId,
         name,
         city,
+        phone,
+        website,
+        address,
+        photoUrl,
       },
     });
 
@@ -94,7 +131,18 @@ const createSchoolProfile = async (req, res) => {
 
 const updateCompanyProfile = async (req, res) => {
   try {
-    const { name, city, description } = req.body;
+    const {
+      name,
+      sector,
+      city,
+      description,
+      phone,
+      website,
+      address,
+      contactName,
+      photoUrl,
+      galleryUrls,
+    } = req.body;
 
     const existingProfile = await prisma.company.findUnique({
       where: { userId: req.user.userId },
@@ -110,8 +158,15 @@ const updateCompanyProfile = async (req, res) => {
       where: { userId: req.user.userId },
       data: {
         name,
+        sector,
         city,
         description,
+        phone,
+        website,
+        address,
+        contactName,
+        photoUrl,
+        galleryUrls,
       },
     });
 
@@ -128,7 +183,7 @@ const updateCompanyProfile = async (req, res) => {
 
 const updateSchoolProfile = async (req, res) => {
   try {
-    const { name, city } = req.body;
+    const { name, city, phone, website, address, photoUrl } = req.body;
 
     const existingProfile = await prisma.school.findUnique({
       where: { userId: req.user.userId },
@@ -145,6 +200,10 @@ const updateSchoolProfile = async (req, res) => {
       data: {
         name,
         city,
+        phone,
+        website,
+        address,
+        photoUrl,
       },
     });
 
@@ -189,7 +248,18 @@ const getMyProfile = async (req, res) => {
 
 const updateStudentProfile = async (req, res) => {
   try {
-    const { firstName, lastName, fieldOfStudy, studyLevel, city, cvUrl, schoolId } = req.body;
+    const {
+      firstName,
+      lastName,
+      fieldOfStudy,
+      studyLevel,
+      city,
+      phone,
+      bio,
+      cvUrl,
+      photoUrl,
+      schoolId,
+    } = req.body;
 
     const existingProfile = await prisma.student.findUnique({
       where: { userId: req.user.userId },
@@ -209,7 +279,10 @@ const updateStudentProfile = async (req, res) => {
         fieldOfStudy,
         studyLevel,
         city,
+        phone,
+        bio,
         cvUrl,
+        photoUrl,
         schoolId,
       },
     });

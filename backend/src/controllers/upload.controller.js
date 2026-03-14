@@ -23,5 +23,6 @@ module.exports = {
   uploadCvFile: uploadFile("cvs"),
   uploadMotivationLetterFile: uploadFile("motivation_letters"),
   uploadConventionFile: uploadFile("conventions"),
+  uploadProfilePhotoFile: uploadFile("profile_photos"),
   uploadReportFile: uploadFile("reports"),
 };

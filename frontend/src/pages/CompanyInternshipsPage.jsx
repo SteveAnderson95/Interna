@@ -1,8 +1,9 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import api from "../services/api";
 
 function CompanyInternshipsPage() {
+  const navigate = useNavigate();
   const [internships, setInternships] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -16,7 +17,7 @@ function CompanyInternshipsPage() {
         const response = await api.get("/api/internships/company");
         setInternships(response.data.internships);
       } catch (err) {
-        setError("Impossible de charger les stages");
+        setError(err.response?.data?.message || "Impossible de charger les stages");
       } finally {
         setLoading(false);
       }
@@ -71,6 +72,13 @@ function CompanyInternshipsPage() {
     return (
       <div className="page-shell">
         <div className="message message-error">{error}</div>
+        {error === "Company profile not found" && (
+          <div className="button-row">
+            <button className="button button-primary" onClick={() => navigate("/profile")}>
+              Completer le profil entreprise
+            </button>
+          </div>
+        )}
       </div>
     );
   }

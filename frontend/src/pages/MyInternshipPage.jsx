@@ -1,8 +1,9 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import api from "../services/api";
 
 function MyInternshipPage() {
+  const navigate = useNavigate();
   const [internship, setInternship] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -77,6 +78,13 @@ function MyInternshipPage() {
     return (
       <div className="page-shell">
         <div className="message message-error">{error}</div>
+        {error === "Student profile not found" && (
+          <div className="button-row">
+            <button className="button button-primary" onClick={() => navigate("/profile")}>
+              Completer mon profil
+            </button>
+          </div>
+        )}
       </div>
     );
   }

@@ -82,6 +82,12 @@ const login = async (req, res) => {
       });
     }
 
+    if (!user.active) {
+      return res.status(403).json({
+        message: "Account disabled",
+      });
+    }
+
     const isPasswordValid = await bcrypt.compare(password, user.password);
 
     if (!isPasswordValid) {
@@ -103,6 +109,7 @@ const login = async (req, res) => {
         id: user.id,
         email: user.email,
         role: user.role,
+        active: user.active,
       },
     });
   } catch (error) {

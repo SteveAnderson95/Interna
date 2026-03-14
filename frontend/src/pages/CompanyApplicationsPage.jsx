@@ -1,5 +1,5 @@
-import { Link } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
 import api from "../services/api";
 
 function getStatusClass(status) {
@@ -7,17 +7,23 @@ function getStatusClass(status) {
 }
 
 function CompanyApplicationsPage() {
+  const navigate = useNavigate();
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
+  const [filter, setFilter] = useState("TOUTES");
+
+  const baseUrl = api.defaults.baseURL;
 
   const fetchApplications = async () => {
     try {
       const response = await api.get("/api/applications/company");
       setApplications(response.data.applications);
     } catch (err) {
-      setError("Impossible de charger les candidatures");
+      setError(
+        err.response?.data?.message || "Impossible de charger les candidatures"
+      );
     } finally {
       setLoading(false);
     }
@@ -46,6 +52,14 @@ function CompanyApplicationsPage() {
     }
   };
 
+  const filteredApplications = useMemo(() => {
+    if (filter === "TOUTES") {
+      return applications;
+    }
+
+    return applications.filter((application) => application.status === filter);
+  }, [applications, filter]);
+
   if (loading) {
     return (
       <div className="page-shell">
@@ -58,6 +72,13 @@ function CompanyApplicationsPage() {
     return (
       <div className="page-shell">
         <div className="message message-error">{error}</div>
+        {error === "Company profile not found" && (
+          <div className="button-row">
+            <button className="button button-primary" onClick={() => navigate("/profile")}>
+              Completer le profil entreprise
+            </button>
+          </div>
+        )}
       </div>
     );
   }
@@ -77,32 +98,112 @@ function CompanyApplicationsPage() {
       {message && <p className="message message-success">{message}</p>}
       {error && <p className="message message-error">{error}</p>}
 
-      {applications.length === 0 ? (
-        <div className="empty-state">Aucune candidature recue pour le moment.</div>
+      <section className="surface-card">
+        <div className="section-header">
+          <div>
+            <span className="eyebrow">Filtres</span>
+            <h2 className="section-title">Classement par statut</h2>
+          </div>
+        </div>
+
+        <div className="filter-tabs">
+          {["TOUTES", "EN_ATTENTE", "ACCEPTEE", "REFUSEE", "BLOQUEE"].map((status) => (
+            <button
+              key={status}
+              className={`filter-tab${filter === status ? " filter-tab-active" : ""}`}
+              onClick={() => setFilter(status)}
+              type="button"
+            >
+              {status}
+            </button>
+          ))}
+        </div>
+      </section>
+
+      {filteredApplications.length === 0 ? (
+        <div className="empty-state">Aucune candidature dans cette categorie.</div>
       ) : (
         <div className="card-grid cards-tight">
-          {applications.map((application) => (
+          {filteredApplications.map((application) => (
             <article className="record-card" key={application.id}>
-              <h3>{application.internshipOffer.title}</h3>
-              <div className="record-meta">
-                <span className={getStatusClass(application.status)}>
-                  {application.status}
-                </span>
-                <span className="pill">Etudiant #{application.student.id}</span>
+              <div className="avatar-block" style={{ marginBottom: 16 }}>
+                {application.student.photoUrl ? (
+                  <img
+                    alt="Etudiant"
+                    className="avatar-image"
+                    src={`${baseUrl}/${application.student.photoUrl}`}
+                  />
+                ) : (
+                  <div className="avatar-placeholder">
+                    {(application.student.firstName?.[0] || "E") +
+                      (application.student.lastName?.[0] || "T")}
+                  </div>
+                )}
+                <div>
+                  <h3 style={{ marginBottom: 4 }}>
+                    {application.student.firstName} {application.student.lastName}
+                  </h3>
+                  <p style={{ margin: 0 }}>{application.student.user?.email}</p>
+                  <p style={{ margin: 0 }}>
+                    {application.student.fieldOfStudy} - {application.student.studyLevel}
+                  </p>
+                </div>
               </div>
-              <p>Lettre : {application.motivationLetterUrl}</p>
-              <p>Convention : {application.conventionUrl}</p>
+
+              <div className="record-meta">
+                <span className={getStatusClass(application.status)}>{application.status}</span>
+                <span className="pill">{application.internshipOffer.title}</span>
+                {application.student.school?.name && (
+                  <span className="pill">{application.student.school.name}</span>
+                )}
+              </div>
+
+              <p>Ville : {application.student.city || "Non precisee"}</p>
+              <p>Telephone : {application.student.phone || "Non precise"}</p>
+              <p>Bio : {application.student.bio || "Aucune presentation"}</p>
+              {application.blockReason && <p>Motif de blocage : {application.blockReason}</p>}
+
+              <div className="button-row" style={{ marginTop: 14 }}>
+                {application.student.cvUrl && (
+                  <a
+                    className="button button-ghost"
+                    href={`${baseUrl}/${application.student.cvUrl}`}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    Voir le CV
+                  </a>
+                )}
+                <a
+                  className="button button-ghost"
+                  href={`${baseUrl}/${application.motivationLetterUrl}`}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Lettre
+                </a>
+                <a
+                  className="button button-ghost"
+                  href={`${baseUrl}/${application.conventionUrl}`}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Convention
+                </a>
+              </div>
 
               <div className="card-actions" style={{ marginTop: 18 }}>
                 <button
                   className="button button-primary"
                   onClick={() => updateStatus(application.id, "ACCEPTEE")}
+                  disabled={application.status === "ACCEPTEE"}
                 >
                   Accepter
                 </button>
                 <button
                   className="button button-danger"
                   onClick={() => updateStatus(application.id, "REFUSEE")}
+                  disabled={application.status === "REFUSEE"}
                 >
                   Refuser
                 </button>

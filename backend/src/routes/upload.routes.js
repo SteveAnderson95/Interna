@@ -1,11 +1,12 @@
 const express = require("express");
-const { createUploader } = require("../config/multer");
+const { createUploader, IMAGE_EXTENSIONS } = require("../config/multer");
 const authenticate = require("../middlewares/auth.middleware");
 const authorizeRoles = require("../middlewares/role.middleware");
 const {
   uploadConventionFile,
   uploadCvFile,
   uploadMotivationLetterFile,
+  uploadProfilePhotoFile,
   uploadReportFile,
 } = require("../controllers/upload.controller");
 
@@ -41,6 +42,13 @@ router.post(
   authorizeRoles("STUDENT"),
   createUploader("reports").single("file"),
   uploadReportFile
+);
+
+router.post(
+  "/profile-photo",
+  authenticate,
+  createUploader("profile_photos", IMAGE_EXTENSIONS).single("file"),
+  uploadProfilePhotoFile
 );
 
 module.exports = router;

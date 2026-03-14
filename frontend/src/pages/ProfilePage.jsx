@@ -5,21 +5,36 @@ import api from "../services/api";
 const initialStudentForm = {
   firstName: "",
   lastName: "",
+  schoolId: "",
   fieldOfStudy: "",
   studyLevel: "",
   city: "",
+  phone: "",
+  bio: "",
   cvUrl: "",
+  photoUrl: "",
 };
 
 const initialCompanyForm = {
   name: "",
+  sector: "",
   city: "",
   description: "",
+  phone: "",
+  website: "",
+  address: "",
+  contactName: "",
+  photoUrl: "",
+  galleryUrls: [],
 };
 
 const initialSchoolForm = {
   name: "",
   city: "",
+  phone: "",
+  website: "",
+  address: "",
+  photoUrl: "",
 };
 
 function ProfilePage() {
@@ -27,42 +42,60 @@ function ProfilePage() {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [uploadingCv, setUploadingCv] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [studentForm, setStudentForm] = useState(initialStudentForm);
   const [companyForm, setCompanyForm] = useState(initialCompanyForm);
   const [schoolForm, setSchoolForm] = useState(initialSchoolForm);
+  const [schoolOptions, setSchoolOptions] = useState([]);
   const [cvFile, setCvFile] = useState(null);
+  const [photoFile, setPhotoFile] = useState(null);
+  const [galleryFiles, setGalleryFiles] = useState([]);
 
   const baseUrl = api.defaults.baseURL;
 
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const response = await api.get("/api/profile/me");
-        const fetchedUser = response.data.user;
-        const fetchedProfile = response.data.profile;
+        const [profileResponse, schoolsResponse] = await Promise.all([
+          api.get("/api/profile/me"),
+          api.get("/api/school/list"),
+        ]);
+        const fetchedUser = profileResponse.data.user;
+        const fetchedProfile = profileResponse.data.profile;
 
         setUser(fetchedUser);
         setProfile(fetchedProfile);
+        setSchoolOptions(schoolsResponse.data.schools || []);
 
         if (fetchedUser?.role === "STUDENT" && fetchedProfile) {
           setStudentForm({
             firstName: fetchedProfile.firstName || "",
             lastName: fetchedProfile.lastName || "",
+            schoolId: fetchedProfile.schoolId ? String(fetchedProfile.schoolId) : "",
             fieldOfStudy: fetchedProfile.fieldOfStudy || "",
             studyLevel: fetchedProfile.studyLevel || "",
             city: fetchedProfile.city || "",
+            phone: fetchedProfile.phone || "",
+            bio: fetchedProfile.bio || "",
             cvUrl: fetchedProfile.cvUrl || "",
+            photoUrl: fetchedProfile.photoUrl || "",
           });
         }
 
         if (fetchedUser?.role === "COMPANY" && fetchedProfile) {
           setCompanyForm({
             name: fetchedProfile.name || "",
+            sector: fetchedProfile.sector || "",
             city: fetchedProfile.city || "",
             description: fetchedProfile.description || "",
+            phone: fetchedProfile.phone || "",
+            website: fetchedProfile.website || "",
+            address: fetchedProfile.address || "",
+            contactName: fetchedProfile.contactName || "",
+            photoUrl: fetchedProfile.photoUrl || "",
+            galleryUrls: fetchedProfile.galleryUrls || [],
           });
         }
 
@@ -70,6 +103,10 @@ function ProfilePage() {
           setSchoolForm({
             name: fetchedProfile.name || "",
             city: fetchedProfile.city || "",
+            phone: fetchedProfile.phone || "",
+            website: fetchedProfile.website || "",
+            address: fetchedProfile.address || "",
+            photoUrl: fetchedProfile.photoUrl || "",
           });
         }
       } catch (err) {
@@ -86,10 +123,21 @@ function ProfilePage() {
     const formData = new FormData();
     formData.append("file", file);
     const response = await api.post(endpoint, formData, {
-      headers: { "Content-Type": "multipart/form-data" },
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
     });
     return response.data.filePath;
   };
+
+  const resolveFileUrl = (filePath) => `${baseUrl}/${filePath}`;
+
+  const renderAvatar = (photoUrl, fallback) =>
+    photoUrl ? (
+      <img alt="profile" className="avatar-image" src={resolveFileUrl(photoUrl)} />
+    ) : (
+      <div className="avatar-placeholder">{fallback}</div>
+    );
 
   const handleStudentChange = (event) => {
     setStudentForm((current) => ({
@@ -112,7 +160,7 @@ function ProfilePage() {
     }));
   };
 
-  const handleStudentSubmit = async (event) => {
+  const saveStudentProfile = async (event) => {
     event.preventDefault();
     setError("");
     setMessage("");
@@ -120,13 +168,25 @@ function ProfilePage() {
 
     try {
       let nextCvUrl = studentForm.cvUrl;
+      let nextPhotoUrl = studentForm.photoUrl;
 
       if (cvFile) {
-        setUploadingCv(true);
+        setUploading(true);
         nextCvUrl = await uploadFile("/api/upload/cv", cvFile);
       }
 
-      const payload = { ...studentForm, cvUrl: nextCvUrl };
+      if (photoFile) {
+        setUploading(true);
+        nextPhotoUrl = await uploadFile("/api/upload/profile-photo", photoFile);
+      }
+
+      const payload = {
+        ...studentForm,
+        schoolId: studentForm.schoolId ? Number(studentForm.schoolId) : null,
+        cvUrl: nextCvUrl,
+        photoUrl: nextPhotoUrl,
+      };
+
       const response = profile
         ? await api.patch("/api/profile/student", payload)
         : await api.post("/api/profile/student", payload);
@@ -135,53 +195,107 @@ function ProfilePage() {
       setStudentForm((current) => ({
         ...current,
         cvUrl: response.data.profile.cvUrl || nextCvUrl,
+        photoUrl: response.data.profile.photoUrl || nextPhotoUrl,
       }));
       setCvFile(null);
+      setPhotoFile(null);
       setMessage(profile ? "Profil etudiant mis a jour" : "Profil etudiant cree");
     } catch (err) {
       setError(err.response?.data?.message || "Erreur lors de l'enregistrement");
     } finally {
-      setUploadingCv(false);
+      setUploading(false);
       setSaving(false);
     }
   };
 
-  const handleCompanySubmit = async (event) => {
+  const saveCompanyProfile = async (event) => {
     event.preventDefault();
     setError("");
     setMessage("");
     setSaving(true);
 
     try {
+      let nextPhotoUrl = companyForm.photoUrl;
+      let nextGalleryUrls = [...(companyForm.galleryUrls || [])];
+
+      if (photoFile) {
+        setUploading(true);
+        nextPhotoUrl = await uploadFile("/api/upload/profile-photo", photoFile);
+      }
+
+      if (galleryFiles.length > 0) {
+        setUploading(true);
+        const uploadedGalleryUrls = [];
+
+        for (const file of galleryFiles) {
+          const filePath = await uploadFile("/api/upload/profile-photo", file);
+          uploadedGalleryUrls.push(filePath);
+        }
+
+        nextGalleryUrls = [...nextGalleryUrls, ...uploadedGalleryUrls];
+      }
+
+      const payload = {
+        ...companyForm,
+        photoUrl: nextPhotoUrl,
+        galleryUrls: nextGalleryUrls,
+      };
+
       const response = profile
-        ? await api.patch("/api/profile/company", companyForm)
-        : await api.post("/api/profile/company", companyForm);
+        ? await api.patch("/api/profile/company", payload)
+        : await api.post("/api/profile/company", payload);
 
       setProfile(response.data.profile);
+      setCompanyForm((current) => ({
+        ...current,
+        photoUrl: response.data.profile.photoUrl || nextPhotoUrl,
+        galleryUrls: response.data.profile.galleryUrls || nextGalleryUrls,
+      }));
+      setPhotoFile(null);
+      setGalleryFiles([]);
       setMessage(profile ? "Profil entreprise mis a jour" : "Profil entreprise cree");
     } catch (err) {
       setError(err.response?.data?.message || "Erreur lors de l'enregistrement");
     } finally {
+      setUploading(false);
       setSaving(false);
     }
   };
 
-  const handleSchoolSubmit = async (event) => {
+  const saveSchoolProfile = async (event) => {
     event.preventDefault();
     setError("");
     setMessage("");
     setSaving(true);
 
     try {
+      let nextPhotoUrl = schoolForm.photoUrl;
+
+      if (photoFile) {
+        setUploading(true);
+        nextPhotoUrl = await uploadFile("/api/upload/profile-photo", photoFile);
+      }
+
+      const payload = {
+        ...schoolForm,
+        photoUrl: nextPhotoUrl,
+      };
+
       const response = profile
-        ? await api.patch("/api/profile/school", schoolForm)
-        : await api.post("/api/profile/school", schoolForm);
+        ? await api.patch("/api/profile/school", payload)
+        : await api.post("/api/profile/school", payload);
 
       setProfile(response.data.profile);
+      setSchoolForm((current) => ({
+        ...current,
+        photoUrl: response.data.profile.photoUrl || nextPhotoUrl,
+      }));
+      setPhotoFile(null);
       setMessage(profile ? "Profil ecole mis a jour" : "Profil ecole cree");
     } catch (err) {
       setError(err.response?.data?.message || "Erreur lors de l'enregistrement");
     } finally {
+      setUploading(false);
       setSaving(false);
     }
   };
@@ -202,12 +316,26 @@ function ProfilePage() {
     );
   }
 
+  const currentPhotoUrl =
+    user.role === "STUDENT"
+      ? studentForm.photoUrl
+      : user.role === "COMPANY"
+        ? companyForm.photoUrl
+        : schoolForm.photoUrl;
+
+  const currentName =
+    user.role === "STUDENT"
+      ? `${studentForm.firstName || ""} ${studentForm.lastName || ""}`.trim() || "Etudiant"
+      : user.role === "COMPANY"
+        ? companyForm.name || "Entreprise"
+        : schoolForm.name || "Ecole";
+
   return (
     <div className="page-shell">
       <div className="top-bar">
         <div>
-          <span className="eyebrow">Profil</span>
-          <h1 className="page-title">Completer les informations de compte</h1>
+          <span className="eyebrow">Profil complet</span>
+          <h1 className="page-title">Fiche utilisateur</h1>
         </div>
         <Link className="button button-ghost" to="/dashboard">
           Retour dashboard
@@ -215,92 +343,69 @@ function ProfilePage() {
       </div>
 
       <section className="surface-card">
-        <div className="section-header">
+        <div className="avatar-block">
+          {renderAvatar(currentPhotoUrl, currentName.slice(0, 2).toUpperCase())}
           <div>
-            <h2 className="section-title">Role : {user.role}</h2>
-            <p className="page-subtitle">
-              Mets a jour uniquement les donnees utiles au flux MVP.
-            </p>
+            <h2 className="section-title" style={{ marginTop: 0 }}>{currentName}</h2>
+            <p className="page-subtitle">{user.email}</p>
+            <p className="page-subtitle">Role : {user.role}</p>
           </div>
         </div>
 
-        {message && <p className="message message-success">{message}</p>}
-        {error && <p className="message message-error">{error}</p>}
+        {message && <p className="message message-success" style={{ marginTop: 18 }}>{message}</p>}
+        {error && <p className="message message-error" style={{ marginTop: 18 }}>{error}</p>}
 
         {user.role === "STUDENT" && (
-          <form className="form-stack" onSubmit={handleStudentSubmit}>
+          <form className="form-stack" onSubmit={saveStudentProfile}>
             <div className="form-grid">
               <div className="form-field">
-                <label htmlFor="student-first-name">Prenom</label>
-                <input
-                  id="student-first-name"
-                  className="input"
-                  type="text"
-                  name="firstName"
-                  value={studentForm.firstName}
-                  onChange={handleStudentChange}
-                />
+                <label>Prenom</label>
+                <input className="input" name="firstName" value={studentForm.firstName} onChange={handleStudentChange} />
               </div>
               <div className="form-field">
-                <label htmlFor="student-last-name">Nom</label>
-                <input
-                  id="student-last-name"
-                  className="input"
-                  type="text"
-                  name="lastName"
-                  value={studentForm.lastName}
-                  onChange={handleStudentChange}
-                />
+                <label>Nom</label>
+                <input className="input" name="lastName" value={studentForm.lastName} onChange={handleStudentChange} />
               </div>
               <div className="form-field">
-                <label htmlFor="student-field">Filiere</label>
-                <input
-                  id="student-field"
-                  className="input"
-                  type="text"
-                  name="fieldOfStudy"
-                  value={studentForm.fieldOfStudy}
-                  onChange={handleStudentChange}
-                />
+                <label>Filiere</label>
+                <input className="input" name="fieldOfStudy" value={studentForm.fieldOfStudy} onChange={handleStudentChange} />
               </div>
               <div className="form-field">
-                <label htmlFor="student-level">Niveau</label>
-                <input
-                  id="student-level"
-                  className="input"
-                  type="text"
-                  name="studyLevel"
-                  value={studentForm.studyLevel}
-                  onChange={handleStudentChange}
-                />
+                <label>Ecole</label>
+                <select className="input" name="schoolId" value={studentForm.schoolId} onChange={handleStudentChange}>
+                  <option value="">Selectionner une ecole</option>
+                  {schoolOptions.map((school) => (
+                    <option key={school.id} value={school.id}>
+                      {school.name}
+                    </option>
+                  ))}
+                </select>
               </div>
               <div className="form-field">
-                <label htmlFor="student-city">Ville</label>
-                <input
-                  id="student-city"
-                  className="input"
-                  type="text"
-                  name="city"
-                  value={studentForm.city}
-                  onChange={handleStudentChange}
-                />
+                <label>Niveau</label>
+                <input className="input" name="studyLevel" value={studentForm.studyLevel} onChange={handleStudentChange} />
               </div>
               <div className="form-field">
-                <label htmlFor="student-cv">CV</label>
-                <input
-                  id="student-cv"
-                  className="file-input"
-                  type="file"
-                  accept=".pdf,.doc,.docx"
-                  onChange={(event) => setCvFile(event.target.files?.[0] || null)}
-                />
+                <label>Ville</label>
+                <input className="input" name="city" value={studentForm.city} onChange={handleStudentChange} />
+              </div>
+              <div className="form-field">
+                <label>Telephone</label>
+                <input className="input" name="phone" value={studentForm.phone} onChange={handleStudentChange} />
+              </div>
+              <div className="form-field full">
+                <label>Presentation</label>
+                <textarea className="textarea" name="bio" value={studentForm.bio} onChange={handleStudentChange} />
+              </div>
+              <div className="form-field">
+                <label>Photo de profil</label>
+                <input className="file-input" type="file" accept=".png,.jpg,.jpeg,.webp" onChange={(e) => setPhotoFile(e.target.files?.[0] || null)} />
+              </div>
+              <div className="form-field">
+                <label>CV</label>
+                <input className="file-input" type="file" accept=".pdf,.doc,.docx" onChange={(e) => setCvFile(e.target.files?.[0] || null)} />
                 {studentForm.cvUrl && (
-                  <a
-                    className="inline-file-link"
-                    href={`${baseUrl}/${studentForm.cvUrl}`}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
+                  <a className="inline-file-link" href={resolveFileUrl(studentForm.cvUrl)} target="_blank" rel="noreferrer">
                     Ouvrir le CV actuel
                   </a>
                 )}
@@ -308,92 +413,117 @@ function ProfilePage() {
             </div>
 
             <div className="button-row">
-              <button className="button button-primary" disabled={saving || uploadingCv} type="submit">
-                {saving || uploadingCv
-                  ? "Enregistrement..."
-                  : profile
-                    ? "Mettre a jour le profil"
-                    : "Creer le profil"}
+              <button className="button button-primary" type="submit" disabled={saving || uploading}>
+                {saving || uploading ? "Enregistrement..." : profile ? "Mettre a jour le profil" : "Creer le profil"}
               </button>
             </div>
           </form>
         )}
 
         {user.role === "COMPANY" && (
-          <form className="form-stack" onSubmit={handleCompanySubmit}>
+          <form className="form-stack" onSubmit={saveCompanyProfile}>
             <div className="form-grid">
               <div className="form-field">
-                <label htmlFor="company-name">Nom de l'entreprise</label>
-                <input
-                  id="company-name"
-                  className="input"
-                  type="text"
-                  name="name"
-                  value={companyForm.name}
-                  onChange={handleCompanyChange}
-                />
+                <label>Nom de l'entreprise</label>
+                <input className="input" name="name" value={companyForm.name} onChange={handleCompanyChange} />
               </div>
               <div className="form-field">
-                <label htmlFor="company-city">Ville</label>
-                <input
-                  id="company-city"
-                  className="input"
-                  type="text"
-                  name="city"
-                  value={companyForm.city}
-                  onChange={handleCompanyChange}
-                />
+                <label>Responsable contact</label>
+                <input className="input" name="contactName" value={companyForm.contactName} onChange={handleCompanyChange} />
+              </div>
+              <div className="form-field">
+                <label>Secteur</label>
+                <input className="input" name="sector" value={companyForm.sector} onChange={handleCompanyChange} />
+              </div>
+              <div className="form-field">
+                <label>Ville</label>
+                <input className="input" name="city" value={companyForm.city} onChange={handleCompanyChange} />
+              </div>
+              <div className="form-field">
+                <label>Telephone</label>
+                <input className="input" name="phone" value={companyForm.phone} onChange={handleCompanyChange} />
+              </div>
+              <div className="form-field">
+                <label>Site web</label>
+                <input className="input" name="website" value={companyForm.website} onChange={handleCompanyChange} />
+              </div>
+              <div className="form-field">
+                <label>Adresse</label>
+                <input className="input" name="address" value={companyForm.address} onChange={handleCompanyChange} />
               </div>
               <div className="form-field full">
-                <label htmlFor="company-description">Description</label>
-                <textarea
-                  id="company-description"
-                  className="textarea"
-                  name="description"
-                  value={companyForm.description}
-                  onChange={handleCompanyChange}
+                <label>Description</label>
+                <textarea className="textarea" name="description" value={companyForm.description} onChange={handleCompanyChange} />
+              </div>
+              <div className="form-field full">
+                <label>Logo ou photo</label>
+                <input className="file-input" type="file" accept=".png,.jpg,.jpeg,.webp" onChange={(e) => setPhotoFile(e.target.files?.[0] || null)} />
+              </div>
+              <div className="form-field full">
+                <label>Images de l'entreprise</label>
+                <input
+                  className="file-input"
+                  type="file"
+                  accept=".png,.jpg,.jpeg,.webp"
+                  multiple
+                  onChange={(e) => setGalleryFiles(Array.from(e.target.files || []))}
                 />
               </div>
             </div>
 
+            {companyForm.galleryUrls?.length > 0 && (
+              <div className="gallery-grid">
+                {companyForm.galleryUrls.map((imagePath, index) => (
+                  <img
+                    key={`${imagePath}-${index}`}
+                    alt="Entreprise"
+                    className="gallery-image"
+                    src={resolveFileUrl(imagePath)}
+                  />
+                ))}
+              </div>
+            )}
+
             <div className="button-row">
-              <button className="button button-primary" disabled={saving} type="submit">
-                {saving ? "Enregistrement..." : profile ? "Mettre a jour le profil" : "Creer le profil"}
+              <button className="button button-primary" type="submit" disabled={saving || uploading}>
+                {saving || uploading ? "Enregistrement..." : profile ? "Mettre a jour le profil" : "Creer le profil"}
               </button>
             </div>
           </form>
         )}
 
         {user.role === "SCHOOL" && (
-          <form className="form-stack" onSubmit={handleSchoolSubmit}>
+          <form className="form-stack" onSubmit={saveSchoolProfile}>
             <div className="form-grid">
               <div className="form-field">
-                <label htmlFor="school-name">Nom de l'ecole</label>
-                <input
-                  id="school-name"
-                  className="input"
-                  type="text"
-                  name="name"
-                  value={schoolForm.name}
-                  onChange={handleSchoolChange}
-                />
+                <label>Nom de l'ecole</label>
+                <input className="input" name="name" value={schoolForm.name} onChange={handleSchoolChange} />
               </div>
               <div className="form-field">
-                <label htmlFor="school-city">Ville</label>
-                <input
-                  id="school-city"
-                  className="input"
-                  type="text"
-                  name="city"
-                  value={schoolForm.city}
-                  onChange={handleSchoolChange}
-                />
+                <label>Ville</label>
+                <input className="input" name="city" value={schoolForm.city} onChange={handleSchoolChange} />
+              </div>
+              <div className="form-field">
+                <label>Telephone</label>
+                <input className="input" name="phone" value={schoolForm.phone} onChange={handleSchoolChange} />
+              </div>
+              <div className="form-field">
+                <label>Site web</label>
+                <input className="input" name="website" value={schoolForm.website} onChange={handleSchoolChange} />
+              </div>
+              <div className="form-field full">
+                <label>Adresse</label>
+                <input className="input" name="address" value={schoolForm.address} onChange={handleSchoolChange} />
+              </div>
+              <div className="form-field full">
+                <label>Photo / logo</label>
+                <input className="file-input" type="file" accept=".png,.jpg,.jpeg,.webp" onChange={(e) => setPhotoFile(e.target.files?.[0] || null)} />
               </div>
             </div>
 
             <div className="button-row">
-              <button className="button button-primary" disabled={saving} type="submit">
-                {saving ? "Enregistrement..." : profile ? "Mettre a jour le profil" : "Creer le profil"}
+              <button className="button button-primary" type="submit" disabled={saving || uploading}>
+                {saving || uploading ? "Enregistrement..." : profile ? "Mettre a jour le profil" : "Creer le profil"}
               </button>
             </div>
           </form>

@@ -94,8 +94,17 @@ const getCompanyInternshipById = async (userId, internshipId) => {
   const internship = await prisma.internship.findUnique({
     where: { id: internshipId },
     include: {
-      student: true,
+      student: {
+        include: {
+          school: true,
+        },
+      },
       company: true,
+      application: {
+        include: {
+          internshipOffer: true,
+        },
+      },
     },
   });
 
@@ -122,11 +131,10 @@ const downloadAttestationPdf = async (req, res) => {
     }
 
     const internship = result.internship;
-    const studentName = `${internship.student.firstName} ${internship.student.lastName}`;
     const pdfBuffer = await createAttestationPdf({
       internship,
-      studentName,
-      companyName: internship.company.name,
+      student: internship.student,
+      company: internship.company,
     });
 
     res.setHeader("Content-Type", "application/pdf");
@@ -155,11 +163,17 @@ const downloadEvaluationPdf = async (req, res) => {
     }
 
     const internship = result.internship;
-    const studentName = `${internship.student.firstName} ${internship.student.lastName}`;
+    await prisma.evaluation.upsert({
+      where: { internshipId: internship.id },
+      update: {},
+      create: {
+        internshipId: internship.id,
+      },
+    });
     const pdfBuffer = await createEvaluationPdf({
       internship,
-      studentName,
-      companyName: internship.company.name,
+      student: internship.student,
+      company: internship.company,
     });
 
     res.setHeader("Content-Type", "application/pdf");
