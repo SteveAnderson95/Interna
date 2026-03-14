@@ -89,6 +89,7 @@ Dans `backend/` :
 ```powershell
 npx prisma generate
 npx prisma db push
+npm run seed
 ```
 
 ## 6. Lancer le projet
@@ -154,6 +155,13 @@ Ces comptes ont deja des donnees de demonstration :
 - une candidature
 - un stage valide
 - un livrable
+
+Si les comptes n'existent pas encore, lancez simplement :
+
+```powershell
+cd backend
+npm run seed
+```
 
 ## 9. Si quelque chose ne marche pas
 
