@@ -20,7 +20,26 @@ const matchingRoutes = require("./routes/matching.routes");
 
 const app = express();
 
-app.use(cors());
+const allowedOrigins = [
+  process.env.FRONTEND_URL,
+  process.env.FRONTEND_URL_ALT,
+  "http://localhost:5173",
+  "http://127.0.0.1:5173",
+].filter(Boolean);
+
+app.use(
+  cors({
+    origin(origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+        return;
+      }
+
+      callback(new Error("Origin not allowed by CORS"));
+    },
+    credentials: true,
+  })
+);
 app.use(express.json());
 app.use("/api/auth", authRoutes);
 app.use("/api/profile", profileRoutes);
@@ -52,6 +71,13 @@ app.get("/api/health", async (req, res) => {
       message: "Database connection error",
     });
   }
+});
+
+app.get("/", (req, res) => {
+  res.json({
+    message: "Interna API is running",
+    health: "/api/health",
+  });
 });
 
 app.get("/api/auth/me", authenticate, async (req, res) => {
