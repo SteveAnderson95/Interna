@@ -20,17 +20,48 @@ const matchingRoutes = require("./routes/matching.routes");
 
 const app = express();
 
-const allowedOrigins = [
+const configuredOrigins = [
   process.env.FRONTEND_URL,
   process.env.FRONTEND_URL_ALT,
   "http://localhost:5173",
   "http://127.0.0.1:5173",
 ].filter(Boolean);
 
+const normalizeOrigin = (origin) => origin?.replace(/\/+$/, "");
+
+const allowedOrigins = configuredOrigins.map(normalizeOrigin);
+
+const isAllowedOrigin = (origin) => {
+  if (!origin) {
+    return true;
+  }
+
+  const normalizedOrigin = normalizeOrigin(origin);
+
+  if (allowedOrigins.includes(normalizedOrigin)) {
+    return true;
+  }
+
+  try {
+    const { hostname, protocol } = new URL(normalizedOrigin);
+
+    if (
+      protocol === "https:" &&
+      (hostname.endsWith(".vercel.app") || hostname.endsWith(".railway.app"))
+    ) {
+      return true;
+    }
+  } catch (error) {
+    return false;
+  }
+
+  return false;
+};
+
 app.use(
   cors({
     origin(origin, callback) {
-      if (!origin || allowedOrigins.includes(origin)) {
+      if (isAllowedOrigin(origin)) {
         callback(null, true);
         return;
       }
